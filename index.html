@@ -1,118 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Visitas - Florencio Varela</title>
-  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro de Visitas</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
     body { font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; }
     h1 { text-align: center; }
     form { margin-bottom: 20px; }
     label { display: block; margin-top: 10px; }
     input, select, button { padding: 8px; width: 100%; margin-top: 5px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-    .export-btn { background: green; color: white; padding: 10px; margin-top: 10px; }
   </style>
 </head>
 <body>
   <h1>Registro de Visitas</h1>
 
   <form id="visitaForm">
-    <label>Fecha:
-      <input type="date" id="fecha" required>
-    </label>
-
-    <label>Edificio:
-      <input type="text" id="edificio" required>
-    </label>
-
-    <label>Departamento:
-      <input type="text" id="departamento" required>
-    </label>
-
+    <label>Fecha:<input type="date" id="fecha" required /></label>
+    <label>Edificio:<input type="text" id="edificio" required /></label>
+    <label>Departamento:<input type="text" id="departamento" required /></label>
     <label>¿Atendió?:
       <select id="atendio" required>
         <option value="Sí">Sí</option>
         <option value="No">No</option>
       </select>
     </label>
-
-    <label>Conversación:
-      <input type="text" id="conversacion" maxlength="200">
-    </label>
-
+    <label>Conversación:<input type="text" id="conversacion" maxlength="200" /></label>
     <button type="submit">Guardar</button>
   </form>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Edificio</th>
-        <th>Depto</th>
-        <th>¿Atendió?</th>
-        <th>Conversación</th>
-      </tr>
-    </thead>
-    <tbody id="tablaBody"></tbody>
-  </table>
-
-  <button class="export-btn" onclick="exportarExcel()">Exportar a Excel</button>
-
   <script>
-    const form = document.getElementById('visitaForm');
-    const tablaBody = document.getElementById('tablaBody');
-    let visitas = JSON.parse(localStorage.getItem('visitas')) || [];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzr-2QlTDgG39dK-PKpUIHPrbr-8ojQx-7XPIGe_EevRrL589CfYkr0iqZ8YuIbC42VCg/exec";
 
-    function mostrarVisitas() {
-      tablaBody.innerHTML = '';
-      visitas.forEach(v => {
-        tablaBody.innerHTML += `<tr>
-          <td>${v.fecha}</td>
-          <td>${v.edificio}</td>
-          <td>${v.departamento}</td>
-          <td>${v.atendio}</td>
-          <td>${v.conversacion}</td>
-        </tr>`;
-      });
-    }
-
-    form.addEventListener('submit', e => {
+    document.getElementById("visitaForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const nueva = {
+      const data = {
         fecha: fecha.value,
         edificio: edificio.value,
         departamento: departamento.value,
         atendio: atendio.value,
         conversacion: conversacion.value
       };
-      visitas.push(nueva);
-      localStorage.setItem('visitas', JSON.stringify(visitas));
-      mostrarVisitas();
-      form.reset();
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        alert("✅ Visita guardada en Google Sheets");
+        document.getElementById("visitaForm").reset();
+      } catch (err) {
+        alert("❌ Error al guardar");
+      }
     });
-
-    function exportarExcel() {
-      let csv = "Fecha,Edificio,Departamento,Atendió,Conversación\n";
-      visitas.forEach(v => {
-        csv += `${v.fecha},${v.edificio},${v.departamento},${v.atendio},${v.conversacion}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'visitas_varela.csv';
-      a.click();
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-
-    mostrarVisitas();
   </script>
 </body>
 </html>
